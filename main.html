@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>小狗啃主人模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "仿宋", "FangSong", "STFangsong", serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+        }
+        
+        .disclaimer {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #856404;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .disclaimer-content {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 5px;
+            border: 1px dashed #ffeaa7;
+        }
+        
+        h1 {
+            color: #c0392b;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 #fdcb6e;
+        }
+        
+        .event-alert {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            animation: slideIn 0.5s ease-out;
+            display: none;
+            border: 2px solid #2c3e50;
+        }
+        
+        .dog-container {
+            font-size: 80px;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+        }
+        
+        .fragments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 3px dashed #e74c3c;
+        }
+        
+        .fragment-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #bdc3c7;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .fragment-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .fragment-item.eaten {
+            background: #f1f1f1;
+            border-color: #95a5a6;
+        }
+        
+        .fragment-item.eaten .fragment-name {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+        
+        .fragment-item.eaten::after {
+            content: "✅";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 16px;
+        }
+        
+        .fragment-emoji {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .fragment-name {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .progress-container {
+            background: #ecf0f1;
+            border-radius: 25px;
+            height: 30px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 2px solid #2c3e50;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 25px 0;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #2c3e50;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-reset {
+            background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+        }
+        
+        .btn-event {
+            background: linear-gradient(135deg, #fdcb6e, #f39c12);
+        }
+        
+        .status-message {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 20px;
+            color: #856404;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .completion-message {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            animation: celebrate 1s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes chew {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(10deg); }
+            75% { transform: rotate(-10deg); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .chewing {
+            animation: chew 0.3s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 免责声明 -->
+        <div class="disclaimer" onclick="toggleDisclaimer()">
+            ⚠️ 免责声明：本游戏纯属虚构，请勿模仿（点击展开）
+            <div class="disclaimer-content" id="disclaimerContent">
+                1. 本游戏为纯娱乐性质，所有内容均为虚构<br>
+                2. 请勿在现实生活中模仿任何游戏中的行为<br>
+                3. 游戏内容不代表开发者真实观点<br>
+                4. 如感不适请立即停止游戏<br>
+                5. 仅限成年人娱乐使用
+            </div>
+        </div>
+        
+        <h1>🐶 小狗啃主人模拟器 🍖</h1>
+        
+        <!-- 随机事件提示 -->
+        <div class="event-alert" id="eventAlert"></div>
+        
+        <div class="dog-container" id="dog" onclick="randomEvent()">🐕</div>
+        
+        <div class="fragments-grid" id="fragmentsGrid">
+            <!-- 主人碎片将会通过JS动态生成 -->
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        
+        <div class="status-message" id="statusMessage">
+            请选择要啃的主人碎片...
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="chewRandom()">随机啃一口</button>
+            <button class="btn btn-event" onclick="triggerRandomEvent()">触发随机事件</button>
+            <button class="btn btn-reset" onclick="resetFeast()">重新煮一锅</button>
+        </div>
+        
+        <div id="completionArea"></div>
+    </div>
+
+    <script>
+        // 主人碎片列表
+        const fragments = [
+            { emoji: "👃", name: "鼻子", eaten: false },
+            { emoji: "👂", name: "耳朵", eaten: false },
+            { emoji: "👄", name: "嘴巴", eaten: false },
+            { emoji: "👁️", name: "眼睛", eaten: false },
+            { emoji: "🖐️", name: "左手", eaten: false },
+            { emoji: "🤚", name: "右手", eaten: false },
+            { emoji: "🦵", name: "左腿", eaten: false },
+            { emoji: "🦶", name: "右腿", eaten: false },
+            { emoji: "🧠", name: "脑子", eaten: false },
+            { emoji: "❤️", name: "心脏", eaten: false },
+            { emoji: "🫁", name: "肺叶", eaten: false },
+            { emoji: "🦴", name: "骨头", eaten: false }
+        ];
+
+        // 随机事件列表
+        const randomEvents = [
+            {
+                title: "🍖 发现隐藏美味",
+                message: "在主人锅里发现了一块特别美味的肉！自动啃食一个随机部位",
+                action: () => chewRandom()
+            },
+            {
+                title: "🔥 火力加大",
+                message: "厨房火力突然加大，主人更入味了！所有未啃部位更容易啃了",
+                action: () => showMessage("火力加大，主人更香了！")
+            },
+            {
+                title: "🐕 小狗进化",
+                message: "小狗学会了新技能：连续啃食！下次啃食速度更快",
+                action: () => showMessage("小狗进化：啃食速度提升！")
+            },
+            {
+                title: "⏰ 时间加速",
+                message: "时间流逝加快，自动啃食两个随机部位",
+                action: () => { chewRandom(); setTimeout(chewRandom, 800); }
+            },
+            {
+                title: "🎲 幸运骰子",
+                message: "掷出幸运数字！如果进度超过50%，直接完成一个部位",
+                action: () => {
+                    const eatenCount = fragments.filter(f => f.eaten).length;
+                    if (eatenCount >= fragments.length / 2) {
+                        const uneaten = fragments.filter(f => !f.eaten);
+                        if (uneaten.length > 0) {
+                            const randomIndex = fragments.findIndex(f => f.name === uneaten[0].name);
+                            fragments[randomIndex].eaten = true;
+                            initFragments();
+                            showMessage("幸运骰子生效！自动完成一个部位");
+                        }
+                    } else {
+                        showMessage("幸运值不足，需要更多啃食进度");
+                    }
+                }
+            },
+            {
+                title: "💥 厨房事故",
+                message: "锅打翻了！需要重新开始啃食",
+                action: () => {
+                    resetFeast();
+                    showMessage("锅打翻了，重新开始啃食...");
+                }
+            }
+        ];
+
+        const dog = document.getElementById('dog');
+        const fragmentsGrid = document.getElementById('fragmentsGrid');
+        const progressBar = document.getElementById('progressBar');
+        const statusMessage = document.getElementById('statusMessage');
+        const eventAlert = document.getElementById('eventAlert');
+        const disclaimerContent = document.getElementById('disclaimerContent');
+
+        // 切换免责声明显示
+        function toggleDisclaimer() {
+            disclaimerContent.style.display = disclaimerContent.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // 显示消息
+        function showMessage(message) {
+            statusMessage.innerHTML = message;
+        }
+
+        // 触发随机事件
+        function triggerRandomEvent() {
+            const randomEvent = randomEvents[Math.floor(Math.random() * randomEvents.length)];
+            
+            eventAlert.innerHTML = `<strong>${randomEvent.title}</strong><br>${randomEvent.message}`;
+            eventAlert.style.display = 'block';
+            
+            // 执行事件动作
+            randomEvent.action();
+            
+            // 3秒后隐藏事件提示
+            setTimeout(() => {
+                eventAlert.style.display = 'none';
+            }, 3000);
+            
+            // 更新进度
+            updateProgress();
+        }
+
+        // 点击小狗也有几率触发事件
+        function randomEvent() {
+            if (Math.random() < 0.3) { // 30%几率触发事件
+                triggerRandomEvent();
+            }
+        }
+
+        // 初始化碎片网格
+        function initFragments() {
+            fragmentsGrid.innerHTML = '';
+            fragments.forEach((fragment, index) => {
+                const fragmentElement = document.createElement('div');
+                fragmentElement.className = `fragment-item ${fragment.eaten ? 'eaten' : ''}`;
+                fragmentElement.innerHTML = `
+                    <div class="fragment-emoji">${fragment.emoji}</div>
+                    <div class="fragment-name">${fragment.name}</div>
+                `;
+                fragmentElement.onclick = () => chewFragment(index);
+                fragmentsGrid.appendChild(fragmentElement);
+            });
+            updateProgress();
+        }
+
+        // 啃食碎片
+        function chewFragment(index) {
+            if (fragments[index].eaten) return;
+            
+            dog.classList.add('chewing');
+            statusMessage.innerHTML = `小狗正在啃${fragments[index].name}... 🦴`;
+            
+            setTimeout(() => {
+                fragments[index].eaten = true;
+                initFragments();
+                statusMessage.innerHTML = `✅ 成功啃掉${fragments[index].name}！`;
+                dog.classList.remove('chewing');
+                
+                // 啃食后有几率触发事件
+                if (Math.random() < 0.2) {
+                    setTimeout(triggerRandomEvent, 500);
+                }
+                
+                checkCompletion();
+            }, 1000);
+        }
+
+        // 随机啃一口
+        function chewRandom() {
+            const uneatenFragments = fragments.filter(f => !f.eaten);
+            if (uneatenFragments.length === 0) {
+                statusMessage.innerHTML = "已经啃完所有碎片了！";
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * uneatenFragments.length);
+            const fragmentName = uneatenFragments[randomIndex].name;
+            const actualIndex = fragments.findIndex(f => f.name === fragmentName && !f.eaten);
+            
+            chewFragment(actualIndex);
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const eatenCount = fragments.filter(f => f.eaten).length;
+            const totalCount = fragments.length;
+            const percentage = (eatenCount / totalCount) * 100;
+            
+            progressBar.style.width = `${percentage}%`;
+            progressBar.textContent = `${Math.round(percentage)}%`;
+        }
+
+        // 检查是否完成
+        function checkCompletion() {
+            const allEaten = fragments.every(f => f.eaten);
+            if (allEaten) {
+                setTimeout(() => {
+                    const completionDiv = document.createElement('div');
+                    completionDiv.className = 'completion-message';
+                    completionDiv.innerHTML = '🎉 恭喜你（小狗）把主人吃了！ 🎉<br>🍽️ 美味程度：★★★★★<br>🐕 小狗表示很满意！';
+                    document.getElementById('completionArea').appendChild(completionDiv);
+                }, 500);
+            }
+        }
+
+        // 重新开始
+        function resetFeast() {
+            fragments.forEach(fragment => {
+                fragment.eaten = false;
+            });
+            initFragments();
+            statusMessage.innerHTML = "已重新准备一锅主人，请开始啃食...";
+            document.getElementById('completionArea').innerHTML = '';
+        }
+
+        // 初始化
+        initFragments();
+    </script>
+</body>
+</html>
